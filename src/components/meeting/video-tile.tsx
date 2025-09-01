@@ -43,7 +43,7 @@ export default function VideoTile({
       className={cn(
         "relative rounded-lg overflow-hidden border bg-black",
         active ? "ring-2 ring-primary" : "",
-        small ? "aspect-video" : "aspect-video h-full",
+        small ? "aspect-video" : "aspect-video h-[14rem]", // h-full
       )}
     >
       <video

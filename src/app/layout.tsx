@@ -8,7 +8,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Suspense } from "react"
 import { SessionProvider } from "next-auth/react"
-
+import { SocketContextProvider } from "@/context/SocketContextProvider"
 
 export default function RootLayout({
   children,
@@ -20,10 +20,12 @@ export default function RootLayout({
       <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SessionProvider>
+            <SocketContextProvider>
           <Suspense fallback={null}>
             {children}
             {/* <Analytics /> */}
           </Suspense>
+          </SocketContextProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>
