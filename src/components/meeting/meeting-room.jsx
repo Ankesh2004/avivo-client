@@ -26,7 +26,7 @@ import { SocketContext } from "@/context/SocketContextProvider"
 export default function MeetingRoom({ roomId }) {
   // Component logic here
   // const [localStream,setLocalStream] = useState(null);
-  const {joinRoom,localStream,remoteStream,lenaStart} = useContext(SocketContext);
+  const {joinRoom,localStream,remoteStreams,lenaStart} = useContext(SocketContext);
   useEffect(()=>{
     // async function getStream() {
     //   const ls= await navigator.mediaDevices.getUserMedia({
@@ -42,7 +42,13 @@ export default function MeetingRoom({ roomId }) {
   <div className="w-full h-dvh">
     <h1>Meeting Room ID: {roomId}</h1>
     <VideoTile stream={localStream} label="local"></VideoTile>
-    <VideoTile stream={remoteStream} label="remote"></VideoTile>
+    <div>
+      {
+        remoteStreams && remoteStreams.map((stream,idx)=>(
+          <VideoTile stream={stream} key={idx} label="remote"></VideoTile>
+        ))
+      }
+    </div>
     <Button onClick={lenaStart}>Lena Start</Button>
   </div>
   );

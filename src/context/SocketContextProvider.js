@@ -5,6 +5,9 @@ import { Device } from 'mediasoup-client';
 import { get } from "http";
 const SocketContext = createContext(null);
 
+// Handling multiple remote streams :
+// 1. Convert remoteStream --> remoteStreams
+
 export const SocketContextProvider = (props) => {
     const [isConnected,setIsConnected] = useState(false);
     // const [device,setDevice] = useState(null);
@@ -17,7 +20,7 @@ export const SocketContextProvider = (props) => {
     const socket = useRef(null);
     const [localStream,setLocalStream] = useState(null);
     const [deviceReady,setDeviceReady] = useState(false);
-    const [remoteStream,setRemoteStream] = useState(null);
+    const [remoteStreams,setRemoteStreams] = useState([]);
     const [isProducerTransportReady,setIsProducerTransportReady] = useState(false);
     const [isConsumerTransportReady,setIsConsumerTransportReady] = useState(false);
     const [otherPeerPresent,setOtherPeerPresent] = useState(false);
@@ -35,6 +38,7 @@ export const SocketContextProvider = (props) => {
     const allProducers = useRef([]);
     // Data model:
     // [ {producerId,producerSocketId,kind} ]
+    const consuming = useRef(new Set());
 
     // Init socket connection and handle its lifecycle
     useEffect(()=>{
@@ -49,14 +53,21 @@ export const SocketContextProvider = (props) => {
             console.log(`Client ${newSocket.id} disconnected`);
             setIsConnected(false);
         })
-        // listeners on socker
+        // listeners on socket
         newSocket.on('existing-producers',(producers)=>{
+            console.log('Getting xisting prodcucers:',producers);
             for(const producer of producers){
                 allProducers.current.push(producer);
             }
+            //TODO : handle better : currently given timer to let the deviceSetup complete before calling consume
+            setTimeout(()=>{
+                consumeFeed();
+            },)
+            
         })
-        newSocket.on('new-producers',(producer)=>{
+        newSocket.on('new-producer',(producer)=>{
             allProducers.current.push(producer);
+            consumeFeed();
         })
         socket.current = newSocket;
         return ()=>{
@@ -149,7 +160,7 @@ export const SocketContextProvider = (props) => {
     const publishFeed = async()=>{
         const track = localStream.getVideoTracks()[0];
         producerRef.current = await producerTransportRef.current.produce({track});
-        allProducers.current.push(producerRef.current); // TODO: consuming self-stream for testing
+        // allProducers.current.push(producerRef.current); // TODO: consuming self-stream for testing
         setIsConsumerTransportReady(true);
         console.log(allProducers.current);
     }
@@ -201,7 +212,12 @@ export const SocketContextProvider = (props) => {
         }
         // 3. consume the feed
         // TODO : sending only one producer for testing
-        await socket.current.emit('start-consuming',{producerId:allProducers.current[0]._id.id,clientRtpCapabilities:deviceRef.current.rtpCapabilities},async res=>{
+        for(const producer of allProducers.current){
+            // don't consume if already consuming TODO: Handle clean up
+            if(consuming.current.has(producer.producerId)){
+                continue;
+            }
+        await socket.current.emit('start-consuming',{producerId:producer.producerId,clientRtpCapabilities:deviceRef.current.rtpCapabilities},async res=>{
             console.log(res);
             
             if(res==="error"){
@@ -222,7 +238,9 @@ export const SocketContextProvider = (props) => {
                 try{
                     const { track } = consumerRef.current;
                     const newRemoteStream = new MediaStream([track]);
-                    setRemoteStream(newRemoteStream);
+                    setRemoteStreams((prev)=>{
+                        return [...prev,newRemoteStream]
+                    });
                     remoteVideoRef.current.srcObject = new MediaStream([track]);
                 }catch(error){
                     console.log('Error in resuming consumer feed on client side',error);
@@ -232,6 +250,8 @@ export const SocketContextProvider = (props) => {
             await consumerRef.current.resume();
 
         });
+        consuming.current.add(producer.producerId);
+        }
     }
     // useEffect(()=>{
     //     if(!otherPeerPresent) return;
@@ -264,11 +284,11 @@ export const SocketContextProvider = (props) => {
         socket,
         localStream,
         isConnected,
-        remoteStream,
+        remoteStreams,
         joinRoom,
         lenaStart
         
-    }),[socket,localStream,isConnected,remoteStream,lenaStart]);
+    }),[socket,localStream,isConnected,remoteStreams,lenaStart]);
     return (
         <SocketContext.Provider value={contextValues}>
             {props.children}
