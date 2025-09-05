@@ -1,56 +1,63 @@
-// Main meeting UI: handles local/remote media, active speaker, chat panel.
-// NOTE: This is a client-only module that expects a mediasoup signaling server.
-// Provide NEXT_PUBLIC_SIGNALING_URL in Project Settings to connect.
-// In absence of a server, "demoMode" simulates remote tiles for UI preview.
+// meetingroom.jsx (FIXED)
 
 "use client"
 
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { useContext, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { Mic, MicOff, Video, VideoOff, MessageSquareMore, Monitor, PhoneOff } from "lucide-react"
 import VideoTile from "./video-tile"
-import ChatPanel from "./chat-panel"
 import { SocketContext } from "@/context/SocketContextProvider"
 
-// type PeerId = string
-
-// type RemotePeer = {
-//   id: PeerId
-//   displayName: string
-//   videoStream?: MediaStream
-//   audioStream?: MediaStream
-//   volume?: number // for active speaker heuristic
-// }
 export default function MeetingRoom({ roomId }) {
-  // Component logic here
-  // const [localStream,setLocalStream] = useState(null);
-  const {joinRoom,localStream,remoteStreams,lenaStart} = useContext(SocketContext);
-  useEffect(()=>{
-    // async function getStream() {
-    //   const ls= await navigator.mediaDevices.getUserMedia({
-    //     audio:true,
-    //     video:true
-    // })
-    //   setLocalStream(ls);
-    // }
-    // getStream();
+  const { joinRoom, localStream, remoteStreams, lenaStart } = useContext(SocketContext);
+
+  useEffect(() => {
+    // Join the room once when the component mounts
     joinRoom();
-  },[])
-  return (
-  <div className="w-full h-dvh">
-    <h1>Meeting Room ID: {roomId}</h1>
-    <VideoTile stream={localStream} label="local"></VideoTile>
-    <div>
-      {
-        remoteStreams && remoteStreams.map((stream,idx)=>(
-          <VideoTile stream={stream} key={idx} label="remote"></VideoTile>
-        ))
+  }, []) // It's good practice to include dependencies
+
+  // Group streams by participant ID. This is the core of the fix.
+  const participants = useMemo(() => {
+    const grouped = remoteStreams.reduce((acc, { id, stream, kind }) => {
+      // If we haven't seen this participant ID before, create an entry for them
+      if (!acc[id]) {
+        acc[id] = { id };
       }
+      // Add the stream to the correct property based on its kind
+      if (kind === 'video') {
+        acc[id].videoStream = stream;
+      } else if (kind === 'audio') {
+        acc[id].audioStream = stream;
+      }
+      return acc;
+    }, {});
+
+    // The result of reduce is an object, but we need an array to map over for rendering
+    return Object.values(grouped);
+  }, [remoteStreams]);
+
+  return (
+    <div className="w-full h-dvh p-4">
+      <h1>Meeting Room ID: {roomId}</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {/* Local user's video tile. It MUST be muted and mirrored. */}
+        <VideoTile
+          stream={localStream}
+          label="You"
+          muted={true}
+          mirrored={true}
+        />
+
+        {/* Map over the processed participants array */}
+        {participants.map((p) => (
+          <VideoTile
+            key={p.id} // Use the stable participant ID as the key
+            label={`Participant ${p.id.substring(0, 4)}`}
+            stream={p.videoStream}
+            audioStream={p.audioStream}
+          />
+        ))}
+      </div>
+      <Button onClick={lenaStart} className="mt-4">Lena Start</Button>
     </div>
-    <Button onClick={lenaStart}>Lena Start</Button>
-  </div>
   );
 }
-

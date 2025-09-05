@@ -1,5 +1,4 @@
-// Video tile that attaches a MediaStream to a video element.
-// Shows a name label and active border for the current speaker.
+// video-tile.jsx (FIXED)
 
 "use client"
 
@@ -13,6 +12,7 @@ export default function VideoTile({
   small,
   active,
   mirrored = false,
+  muted = false, // Add muted to props, default to false
 }: {
   stream?: MediaStream
   audioStream?: MediaStream
@@ -20,6 +20,7 @@ export default function VideoTile({
   small?: boolean
   active?: boolean
   mirrored?: boolean
+  muted?: boolean // Add type for muted
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -27,14 +28,14 @@ export default function VideoTile({
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream
-      videoRef.current.play().catch(() => {})
+      videoRef.current.play().catch((err) => console.error("Video play failed", err))
     }
   }, [stream])
 
   useEffect(() => {
     if (audioRef.current && audioStream) {
       audioRef.current.srcObject = audioStream
-      audioRef.current.play().catch(() => {})
+      audioRef.current.play().catch((err) => console.error("Audio play failed", err))
     }
   }, [audioStream])
 
@@ -43,16 +44,17 @@ export default function VideoTile({
       className={cn(
         "relative rounded-lg overflow-hidden border bg-black",
         active ? "ring-2 ring-primary" : "",
-        small ? "aspect-video" : "aspect-video h-[14rem]", // h-full
+        small ? "aspect-video" : "aspect-video h-auto", // Use h-auto for better grid layout
       )}
     >
       <video
         ref={videoRef}
         className={cn("h-full w-full object-cover", mirrored ? "scale-x-[-1]" : "")}
-        muted={!audioStream}
+        muted={muted} // Directly use the muted prop from the parent
         playsInline
       />
-      {audioStream && <audio ref={audioRef} hidden autoPlay />}
+      {/* If an audioStream is provided, render a separate audio element */}
+      {audioStream && <audio ref={audioRef} autoPlay playsInline />}
       <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 text-white text-xs">{label}</div>
     </div>
   )
