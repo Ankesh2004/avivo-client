@@ -13,16 +13,15 @@ export default function MeetingRoom({ roomId }) {
   useEffect(() => {
     // Join the room once when the component mounts
     joinRoom();
-  }, []) // It's good practice to include dependencies
+  }, []) 
 
-  // Group streams by participant ID. This is the core of the fix.
+  // Group streams by participant ID. 
   const participants = useMemo(() => {
     const grouped = remoteStreams.reduce((acc, { id, stream, kind }) => {
       // If we haven't seen this participant ID before, create an entry for them
       if (!acc[id]) {
         acc[id] = { id };
       }
-      // Add the stream to the correct property based on its kind
       if (kind === 'video') {
         acc[id].videoStream = stream;
       } else if (kind === 'audio') {
@@ -50,7 +49,7 @@ export default function MeetingRoom({ roomId }) {
         {/* Map over the processed participants array */}
         {participants.map((p) => (
           <VideoTile
-            key={p.id} // Use the stable participant ID as the key
+            key={p.id}
             label={`Participant ${p.id.substring(0, 4)}`}
             stream={p.videoStream}
             audioStream={p.audioStream}

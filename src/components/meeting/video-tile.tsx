@@ -44,10 +44,11 @@ export default function VideoTile({
       className={cn(
         "relative rounded-lg overflow-hidden border bg-black",
         active ? "ring-2 ring-primary" : "",
-        small ? "aspect-video" : "aspect-video h-auto", // Use h-auto for better grid layout
+        small ? "aspect-video" : "aspect-video h-auto",
+        audioStream?"hidden":""
       )}
     >
-      <video
+       <video
         ref={videoRef}
         className={cn("h-full w-full object-cover", mirrored ? "scale-x-[-1]" : "")}
         muted={muted} // Directly use the muted prop from the parent
