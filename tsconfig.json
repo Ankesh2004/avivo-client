@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/context/SocketContextProvider.js", "src/context/RoomContextProvider.js", "src/app/meet/[roomId]/page.jsx", "src/components/meeting/meeting-room.jsx", "src/components/meeting/video-tile.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/context/SocketContextProvider.js", "src/context/RoomContextProvider.js", "src/app/meet/[roomId]/page.jsx", "src/components/meeting/meeting-room.jsx", "src/components/meeting/video-tile.tsx", "src/components/agent/RealtimeAgentWidget.jsx"],
   "exclude": ["node_modules"]
 }

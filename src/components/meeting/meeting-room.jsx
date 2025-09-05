@@ -4,6 +4,7 @@
 
 import { useContext, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
+import RealtimeAgentWidget from "../agent/RealtimeAgentWidget"
 import VideoTile from "./video-tile"
 import { SocketContext } from "@/context/SocketContextProvider"
 
@@ -56,7 +57,16 @@ export default function MeetingRoom({ roomId }) {
           />
         ))}
       </div>
-      <Button onClick={lenaStart} className="mt-4">Lena Start</Button>
+      {/* Sidebar with the AI Agent Widget */}
+      <div className="w-full md:w-80 lg:w-96 flex-shrink-0">
+        <RealtimeAgentWidget
+          agentName="Meeting Assistant"
+          agentInstructions="You are a helpful meeting assistant. Summarize key points and answer questions concisely. The current meeting ID is ZVQQ-97T3."
+          // tokenUrl="https://your-production-url/api/get-token" // Optional: override for different environments
+        />
+        {/* You could add a ChatPanel or other components here */}
+      </div>
+
     </div>
   );
 }
