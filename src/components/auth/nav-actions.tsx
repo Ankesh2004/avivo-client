@@ -13,9 +13,11 @@ export default function NavActions() {
   // Ensure the component is mounted before rendering
   useEffect(() => {
     setIsMounted(true)
-    console.log(session);
+    
   }, [])
-
+  useEffect(()=>{
+    console.log(session);
+  },[isMounted]);
   if (!isMounted) {
     return null // Prevent rendering on the server
   }

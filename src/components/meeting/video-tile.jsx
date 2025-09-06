@@ -1,5 +1,3 @@
-// video-tile.jsx (FIXED)
-
 "use client"
 
 import { useEffect, useRef } from "react"
@@ -12,18 +10,10 @@ export default function VideoTile({
   small,
   active,
   mirrored = false,
-  muted = false, // Add muted to props, default to false
-}: {
-  stream?: MediaStream
-  audioStream?: MediaStream
-  label: string
-  small?: boolean
-  active?: boolean
-  mirrored?: boolean
-  muted?: boolean // Add type for muted
+  muted = false,
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const videoRef = useRef(null)
+  const audioRef = useRef(null)
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -45,16 +35,16 @@ export default function VideoTile({
         "relative rounded-lg overflow-hidden border bg-black",
         active ? "ring-2 ring-primary" : "",
         small ? "aspect-video" : "aspect-video h-auto",
-        audioStream?"hidden":""
+        audioStream?"hidden":"" 
       )}
     >
        <video
         ref={videoRef}
-        className={cn("h-full w-full object-cover", mirrored ? "scale-x-[-1]" : "")}
-        muted={muted} // Directly use the muted prop from the parent
+        className={cn("h-full w-full object-cover", mirrored ? "scale-x-[-1]" : "", !stream ? "hidden" : "")}
+        muted={muted}
         playsInline
       />
-      {/* If an audioStream is provided, render a separate audio element */}
+      {/* If an audioStream is provided, render a separate (and invisible) audio element */}
       {audioStream && <audio ref={audioRef} autoPlay playsInline />}
       <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 text-white text-xs">{label}</div>
     </div>
